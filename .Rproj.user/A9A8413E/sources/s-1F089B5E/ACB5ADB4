@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1573557175788.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "ACB5ADB4",
+    "lastKnownWriteTime" : 1573560597,
+    "last_content_update" : 1573560597404,
+    "path" : "~/Lab5/lab5_cluster.r",
+    "project_path" : "lab5_cluster.r",
+    "properties" : {
+        "cursorPosition" : "34,0",
+        "scrollLine" : "19"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

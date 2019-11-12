@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1573559396187.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "E6A3C570",
+    "lastKnownWriteTime" : 94341598836416,
+    "last_content_update" : 1573559396187,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "id" : "6b23f59e3248448b9ebac93ee0cbb2d3",
+        "name" : "fG",
+        "title" : "fG"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "object_explorer"
+}
