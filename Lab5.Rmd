@@ -31,7 +31,17 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 ## Reading the data
 ```{r}
+IBEX<-read.table("data/Ibex0809.txt",sep="",header=T)
+ENRON<-read.table("data/email-Enron.txt",sep="",header=T)
+BRIGHTKITE<-read.table("data/loc-brightkite_edges.txt",sep="",header=T)
+```
 
+## Testing edge-betweenness
+```{r}
+
+GN<-edge.betweenness.community(IBEX)
+dendPlot(GN)
+modularity(GN)
 ```
 
 

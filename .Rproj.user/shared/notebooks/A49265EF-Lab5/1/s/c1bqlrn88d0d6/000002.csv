@@ -1,0 +1,4 @@
+"0",""
+"0","GN<-edge.betweenness.community(IBEX)"
+"2","Error in edge.betweenness.community(IBEX) : Not a graph object!
+"

@@ -1,0 +1,9 @@
+{
+    "path" : "~/Lab5/data",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

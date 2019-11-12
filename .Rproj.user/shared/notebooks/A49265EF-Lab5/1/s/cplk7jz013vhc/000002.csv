@@ -1,0 +1,3 @@
+"0","IBEX<-read.table(""data/Ibex0809.txt"",sep="""",header=T)"
+"0","ENRON<-read.table(""data/email-Enron.txt"",sep="""",header=T)"
+"0","BRIGHTKITE<-read.table(""data/loc-brightkite_edges.txt"",sep="""",header=T)"
