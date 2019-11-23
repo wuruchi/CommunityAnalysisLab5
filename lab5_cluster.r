@@ -45,6 +45,7 @@ groups <- cutree(hc, h = K)  ##obtain  clusters
 numgp <- max(groups) #number of clusters. 
 #extract the names of each group and convert to list
 W <- list(names(groups[groups==1]))
+
 ##recursively concatenate lists
 for (i in 2:numgp){W <- c(W,list(names(groups[groups==i])))}
 W

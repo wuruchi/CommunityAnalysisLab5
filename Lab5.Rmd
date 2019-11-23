@@ -9,39 +9,216 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+## Lab 5
+```{r}
+library(igraph)
+library(dplyr)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 ## Reading the data
 ```{r}
 IBEX<-read.table("data/Ibex0809.txt",sep="",header=T)
 ENRON<-read.table("data/email-Enron.txt",sep="",header=T)
 BRIGHTKITE<-read.table("data/loc-brightkite_edges.txt",sep="",header=T)
+
+
+ENRON_sample <- data.frame(X0=numeric(), X1=numeric())
+burned <- data.frame(X0=numeric())
+
+recommended_percent <- 0.7
+
+forest_fire_spreader = function(data, current, p) {
+  burned <<- rbind(burned, data.frame(X0=c(current)))
+  current_neighbor <- data[which(data$X0==current),]
+  distri <- rgeom(n = 1, prob = 0.3)
+  distri <- min(distri, nrow(current_neighbor))
+  current_neighbor_sample <- sample_n(current_neighbor, distri)
+  for (x in 1:nrow(current_neighbor_sample)) {
+     ENRON_sample <<- rbind(ENRON_sample, data.frame(X0=c(current_neighbor_sample$X0[x]),X1=c(current_neighbor_sample$X1[x])))
+     forest_fire_spreader(data, current_neighbor_sample$X1[x], p)
+  }
+}
+
+forest_fire = function(data, p) {
+  d_nodes <- distinct(data, X0)
+  picked <- sample_n(d_nodes,1)
+  burned <<- rbind(burned, data.frame(X0=c(picked$X0)))
+  random_picked <- picked$X0
+  current_neighbor <- data[which(data$X0==random_picked),]
+  distri <- rgeom(n = 1, prob = 0.3)
+  distri <- min(distri, nrow(current_neighbor))
+  current_neighbor_sample <- sample_n(current_neighbor, distri)
+  for (x in 1:nrow(current_neighbor_sample)) {
+    #cat("Honk")
+    ENRON_sample <<- rbind(ENRON_sample, data.frame(X0=c(current_neighbor_sample$X0[x]),X1=c(current_neighbor_sample$X1[x])))
+    forest_fire_spreader(data, current_neighbor_sample$X1[x], p)
+  }
+}
+
+
+
+forest_fire(ENRON)
+(burned)
+(ENRON_sample)
+
+# ENRON_nodes <- distinct(ENRON,X0)
+# picked <- sample_n(ENRON_nodes,1)
+# random_picked <- picked$X0
+# current_neighbor <- ENRON[which(ENRON$X0==random_picked),]
+# #E(X) = 1/p 
+# distri <- rgeom(n = 1, prob = 0.3)
+# current_neighbor_sample <- sample_n(current_neighbor, distri)
+# #summary(distri)
+
+
+# Edge sampling without replacement
+#ENRON %>% distinct(X0,X1)
+#ENRON_sample <- sample_frac(ENRON, size = 0.01, replace = FALSE)
+#BRIGHTKITE %>% distinct(X0,X1)
+#BRIGHTKITE_sample <- sample_frac(BRIGHTKITE, size = 0.01, replace = FALSE)
+
 ```
 
-## Testing edge-betweenness
+## Sampling
 ```{r}
 
-GN<-edge.betweenness.community(IBEX)
-dendPlot(GN)
-modularity(GN)
 ```
 
+
+## Ibex Analysis
+```{r}
+
+##HIERARCHICAL CLUST on dissimilarity graph
+dd <-as.dist(2*(1-cor(IBEX)))
+met="ward.D2" ##  complete,single,average,median,mcquitty
+hc <-hclust(dd,method=met)
+plot(hc,main=paste(met," method"),axes=TRUE,xlab="",sub="")
+#compute the cut at mean level K
+l <-length(hc$height);hh <- sort(hc$height);K <- mean(hh[1:l])
+abline(h=K,lty=2,lwd=2) ##draw the cut
+
+#branches below K make clusters, above go to singletons
+groups <- cutree(hc, h = K)  ##obtain  clusters
+numgp <- max(groups) #number of clusters. 
+#extract the names of each group and convert to list
+W <- list(names(groups[groups==1]))
+
+##recursively concatenate lists
+for (i in 2:numgp){W <- c(W,list(names(groups[groups==i])))}
+W
+##Xtras
+plot(hc,hang=-1) ##hang=-1 places labels at bottom
+
+##Obtain adjacency matrix from dissimilarity relation (dist)
+A<-as.matrix(dd)
+##create igraph graph object from adjacency matrix
+G_IBEX <-graph.adjacency(A,mode="undirected",weighted = TRUE)
+plot(G_IBEX)
+
+```
+
+# From Data to Graphs
+
+```{r}
+dd_ibex <- as.dist(2*(1-cor(IBEX)))
+#dd_enron <- as.dist(2*(1-cor(ENRON)))
+#dd_bk <- as.dist(2*(1-cor(BRIGHTKITE)))
+
+
+
+A_ibex<-as.matrix(dd_ibex)
+#A_enron<-as.matrix(dd_enron)
+#A_bk<-as.matrix(dd_bk)
+
+G_IBEX <- graph.adjacency(A_ibex,mode="undirected",weighted = TRUE)
+G_ENRON <-  graph.data.frame(ENRON_sample, directed = FALSE)
+G_ENRON <- simplify(G_ENRON, remove.multiple = TRUE)
+# G_ENRON <- graph.adjacency(A_enron,mode="undirected",weighted = TRUE)
+G_BK <- graph.data.frame(BRIGHTKITE_sample, directed = FALSE)
+G_BK <- simplify(G_BK, remove.multiple = TRUE)
+
+```
+
+
+
+## Testing Algorithm Function
+```{r}
+
+compute_metrics = function(data){
+    data_s <- data.frame(algorithm=character(), TPT=numeric(), expansion=numeric(), conductance=numeric(), modularity=numeric())
+    finaldata_s <- rbind(data_s)
+    colnames(finaldata_s) = c("Algorithm", "TPT", "Expansion","Conductance","Modularity")
+    ## TODO: Loop here for all three 
+    # Edge betweenness
+    ebw <- edge.betweenness.community(data)
+    #ebw_modularity = 
+    ebw_result <- data.frame(algorithm = c("Edge Betweenness"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity(ebw)))
+    finaldata_s <- rbind(finaldata_s,ebw_result)
+    
+    fgc <- fastgreedy.community(data)
+    #fgc_result <- c("Fast Greedy", 0, 0, 0, fgc_modularity)
+    fgc_result <- data.frame(algorithm = c("Fast Greedy"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity(fgc)))
+    finaldata_s <- rbind(finaldata_s,fgc_result)
+    
+    lpc <- label.propagation.community(data)
+    lpc_result <- data.frame(algorithm = c("Label Propagation"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity(lpc)))
+    finaldata_s <- rbind(finaldata_s,lpc_result)
+    
+    lec <- leading.eigenvector.community(data)
+    lec_result <- data.frame(algorithm = c("Leading Eigenvector"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity(lec)))
+    finaldata_s <- rbind(finaldata_s,lec_result)
+    
+    mlvc <- multilevel.community(data)
+    mlvc_result <- data.frame(algorithm = c("Multilevel"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity(mlvc)))
+    finaldata_s <- rbind(finaldata_s,mlvc_result)
+    
+    #opc <- optimal.community(G_IBEX)
+    #opc_result <- c("Optimal", 0, 0, 0, modularity(opc))
+    #finaldata_s <- rbind(finaldata_s,opc_result)
+    
+    sgc <- tryCatch({ spinglass.community(data) }, error=function(cond) { return(0) }) 
+    if (identical(sgc, 0)) {
+      modularity_val <- NA
+    } else {
+      modularity_val <- modularity(sgc)
+    }
+    sgc_result <- data.frame(algorithm = c("Spinglass"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity_val))
+    finaldata_s <- rbind(finaldata_s,sgc_result)
+    
+    wtc <- walktrap.community(data)
+    wtc_result <- data.frame(algorithm = c("Walktrap"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity(wtc)))
+    finaldata_s <- rbind(finaldata_s,wtc_result)
+    
+    imc <- infomap.community(data)
+    imc_result <- data.frame(algorithm = c("Infomap"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity(imc)))
+    
+    finaldata_s <- rbind(finaldata_s,imc_result)
+    
+    return(finaldata_s)
+}
+
+
+
+#🐗
+```
+
+## Tests
+```{r}
+ibex_results <- compute_metrics(G_IBEX)
+enron_results <- compute_metrics(G_ENRON)
+bk_results <- compute_metrics(G_BK)
+```
+
+## Show tests
+```{r}
+ibex_results
+enron_results
+bk_results
+```
+
+# Test
+```{r}
+help("spinglass.community")
+```
 
