@@ -140,7 +140,157 @@ G_BK <- simplify(G_BK, remove.multiple = TRUE)
 
 ```
 
+help(edge.betweenness.community)
+ebw <- edge.betweenness.community(G_ENRON)
+com_test <- ebw[0]
 
+test <- fc(G_ENRON, com_test, ebw)
+
+## Metric function
+```{r} 
+
+
+
+get_edges_df <- function(G,coms){
+  df<-data.frame()
+  for (i in coms){
+    for(edge in E(G)[from(i)]){
+      h <- as.vector(head_of(G,E(G)[edge]))
+      t <- as.vector(tail_of(G,E(G)[edge]))
+      df <- rbind(df, data.frame(h,t))
+    }
+  }
+}
+
+new_subgraph <- function(G,community){
+    edge_list <- get_edges_df(G, community)
+    graph.data.frame(edge_list, directed = FALSE)
+  }
+
+## fc trials (failure)
+  
+  fc_func <- function(G,com){
+    fc <- 0
+    for (c in com){
+      print(c)
+      n <- neighbors(G,c)
+      print(n)
+      n_in <- intersect(n,c)
+      gin <- induced_subgraph(G,n_in)
+      print(V(gin))
+      g <- induced_subgraph(G,c)
+      gn <- induced_subgraph(G, n)
+      #gout<- difference(gn,gin)
+      #print(V(gout))
+      inter <- intersection(g, gn)
+      print(inter)
+      fc <- max(E(inter))  
+    }
+    return(fc)
+  }
+  
+  test <- fc_func(karate, wc[1])
+  print(test)
+  #problem : neighbors function also takes into consideration nodes from the community so some edges are between nodes of the same community
+  
+  fc2 <- function(G, cm, com){
+    fc <-0
+    max <- max(membership(com))
+    for (i in 1:max){
+      for( c in cm)
+      print("community is")
+      for (j in com[i])
+      
+      print(c)
+      print(j)
+      if(!isTRUE(all.equal(j,c))){
+        g1 <- induced_subgraph(G,c)
+        print(E(g1))
+        g2 <- induced_subgraph(G, j)
+        print(E(g2))
+        fc <- fc +  E(intersection(g1,g2))
+        print(fc)
+      }
+    }
+  }
+  test2 <- fc2(karate, wc[1], wc)
+  print(test2)
+  # induced_subgraph doesn't keep the value of the vertices for the new graph and then intersection of the 2 graphs are not intersections with the 2 communities (vertices renamed)
+
+  
+  fc3 <- function(G, com){
+    for(c in com){
+    print(c)
+    edges <- get.edgelist(G,c)
+    print(edges)
+    if( !is.element(1,edges[4])){
+      print(TRUE)
+    }
+    }
+    
+  }
+  test3 <- fc3(karate, wc[1])
+  print(test3)
+  #
+  
+  fc <- function(G,com, communities){
+    fc <-0
+    for (c in com){
+      max <- max(membership(communities))
+      for(i in 0:max)
+        for(coms in communities[i]){
+          if (!isTRUE(all.equal(coms, c))){
+            print(coms)
+            print(c)
+          graph1 <- new_subgraph(G, c)
+          graph2 <- new_subgraph(G, com)
+          g <- intersection(graph1,graph2)
+          fc <- fc + max(E(g))
+        }}
+        
+      }
+    
+    return(fc)
+  }
+  test4 <- fc(karate, wc[1], wc)
+  print(test4)
+
+
+  
+  expansion <- function(G, com, commmunities){
+    #fc <- fc(G,com, communities)
+    #nc <-
+    #results <- fc/nc
+    
+  }
+  
+  conductance <- function(G,com, communities){
+    #fc <- fc(G,com, communities)
+    #mc <-
+    #results <- fc/(2*mc + fc)  
+  }
+
+fc <- function(G,com, communities){
+  fc <-0
+  for (c in com){
+    print(c)
+    for(coms in communities)
+  {print(coms)
+    if (!isTRUE(all.equal(coms, c))){
+      graph1 <- new_subgraph(G, c)
+      graph2 <- new_subgraph(G, com)
+      g <- intersection(graph1,graph2)
+      fc <- fc + max(E(g))
+    }
+  }}
+
+  
+    return(fc)
+}
+
+  
+
+```
 
 ## Testing Algorithm Function
 ```{r}
@@ -152,7 +302,8 @@ compute_metrics = function(data){
     ## TODO: Loop here for all three 
     # Edge betweenness
     ebw <- edge.betweenness.community(data)
-    #ebw_modularity = 
+    #ebw_modularity = modularity(ebw)
+    ebw_expansion = 
     ebw_result <- data.frame(algorithm = c("Edge Betweenness"),TPT= c(0), expansion= c(0), conductance=c(0), modularity=c(modularity(ebw)))
     finaldata_s <- rbind(finaldata_s,ebw_result)
     
