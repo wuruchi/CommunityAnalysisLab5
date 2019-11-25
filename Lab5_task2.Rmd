@@ -6,65 +6,124 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(igraph)
+library(rgl)
+
 ```
 
 ## R Markdown
 
 
+## Read graph
 ```{r}
-getwd()
 wiki <- read.graph("wikipedia.graphml", format="gml")
+wiki <- simplify(wiki)
 undirected_wiki <- as.undirected(wiki, mode = c("collapse", "each", "mutual"),
   edge.attr.comb = igraph_opt("edge.attr.comb"))
+
 ```
 
-```{r}
+## R plotting function
+```{r, fig.width=10, fig.height=10}
+
+#plot 1 community
+plot_com <- function(G, com , num){
+num_vertices <- V(G)[ membership(com) == num]$id
+vertices <- V(G)[ id %in% num_vertices]
+g <- induced_subgraph(G,vertices)
+l <- layout.fruchterman.reingold(g, niter=5000, area=vcount(g)^4*10)
+plot( g, edge.arrow.size=0.5,layout = l, vertex.size = 1, col = "blue", mode = "circle", edge.width=0.5)
+}
+
+
+
+#plot several communities
+plot_communities <-function(G, vertices){
+  g <- induced_subgraph(G,vertices)
+  colors <- as.numeric(V(g)$colors)
+  print(colors)
+  l <- layout.fruchterman.reingold(g, niter=5000, area=vcount(g)^4*10)
+  plot(g, layout = l,
+     edge.arrow.size=0.75,
+     vertex.label.cex = 2,
+     vertex.label.font=2,
+     vertex.label.size=2,
+     vertex.shape="circle",
+     vertex.size=1, 
+     vertex.label.color= colors, 
+     edge.width=0.5)
+}
+
+g_vertices <- function(wiki, communities,a,b){
+  all_vertices <- c()
+  V(wiki)$colors <- communities$membership
+  for(i in a:b){
+    vertices <- V(wiki)[ membership(communities) == i]$id
+    all_vertices <- c(all_vertices,vertices)
+  }
+  g_vertices <- V(wiki)[ id %in% all_vertices]
+  return(g_vertices)
+  
+}
+
+
+
+```
+
+## R Walktrap
+
+```{r, fig.width=10, fig.height=10}
 #walktrap.community
 wc_wiki <- walktrap.community(wiki)
-modularity(wc_wiki)
-membership(wc_wiki)
-plot(wc_wiki, wiki)
+g_vertices <- g_vertices(wiki, wc_wiki, 1,3)
+plot_communities(wiki, g_vertices)
+plot_com(wiki, wc_wiki, 100)
+
+
 ```
 
 
-```{r}
+
+## R Walktrap
+
+
+```{r, fig.width=8, fig.height=8}
 #fastgreedy.community
 fc_wiki <- fastgreedy.community(undirected_wiki)
-modularity(fc_wiki)
-membership(fc_wiki)
-dendPlot(fc_wiki)
+g_vertices <- g_vertices(wiki, fc_wiki, 100,101)
+
+plot_communities(wiki, g_vertices, fc_wiki)
+
 ```
 
 ```{r}
 #edgebetweeness.community
 ebw_wiki <- edge.betweenness.community(wiki)
-modularity(ebw_wiki)
-membership(ebw_wiki)
-dendPlot(ebw_wiki)
+g_vertices <- g_vertices(wiki, fc_wiki, 100,101)
+plot_communities(wiki, g_vertices, ebw_wiki)
+
 ```
 
 ```{r}
 #label.propagation.community
 lp_wiki <- label.propagation.community(wiki)
 modularity(lp_wiki)
-membership(lp_wiki)
-dendPlot(lp_wiki)
+g_vertices <- g_vertices(wiki, lp_wiki, 100,101)
+plot_communities(wiki, g_vertices, lp_wiki)
+
 ```
 
 ```{r}
 #leading.eigenvector.community
 le_wiki <- leading.eigenvector.community(undirected_wiki)
 modularity(le_wiki)
-membership(le_wiki)
-dendPlot(le_wiki)
+
 ```
 
 ```{r}
 #multilevel.community
 ml_wiki <- multilevel.community(undirected_wiki)
 modularity(ml_wiki)
-membership(ml_wiki)
-dendPlot(ml_wiki)
+
 
 ```
 
@@ -73,8 +132,6 @@ dendPlot(ml_wiki)
 #optimal.community
 o_wiki <- optimal.community(wiki)
 modularity(o_wiki)
-membership(o_wiki)
-dendPlot(o_wiki)
 
 ```
 
@@ -82,17 +139,12 @@ dendPlot(o_wiki)
 #spinglass.community
 sg_wiki <- spinglass.community(wiki)
 modularity(sg_wiki)
-membership(sg_wiki)
-dendPlot(sg_wiki)
 
 ```
 ```{r}
 #infomap.community
 im_wiki <- infomap.community(wiki)
 modularity(im_wiki)
-membership(im_wiki)
-dendPlot(im_wiki)
-
 ```
 
 
