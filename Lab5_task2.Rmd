@@ -1,0 +1,98 @@
+---
+title: "Task2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(igraph)
+```
+
+## R Markdown
+
+
+```{r}
+getwd()
+wiki <- read.graph("wikipedia.graphml", format="gml")
+undirected_wiki <- as.undirected(wiki, mode = c("collapse", "each", "mutual"),
+  edge.attr.comb = igraph_opt("edge.attr.comb"))
+```
+
+```{r}
+#walktrap.community
+wc_wiki <- walktrap.community(wiki)
+modularity(wc_wiki)
+membership(wc_wiki)
+plot(wc_wiki, wiki)
+```
+
+
+```{r}
+#fastgreedy.community
+fc_wiki <- fastgreedy.community(undirected_wiki)
+modularity(fc_wiki)
+membership(fc_wiki)
+dendPlot(fc_wiki)
+```
+
+```{r}
+#edgebetweeness.community
+ebw_wiki <- edge.betweenness.community(wiki)
+modularity(ebw_wiki)
+membership(ebw_wiki)
+dendPlot(ebw_wiki)
+```
+
+```{r}
+#label.propagation.community
+lp_wiki <- label.propagation.community(wiki)
+modularity(lp_wiki)
+membership(lp_wiki)
+dendPlot(lp_wiki)
+```
+
+```{r}
+#leading.eigenvector.community
+le_wiki <- leading.eigenvector.community(undirected_wiki)
+modularity(le_wiki)
+membership(le_wiki)
+dendPlot(le_wiki)
+```
+
+```{r}
+#multilevel.community
+ml_wiki <- multilevel.community(undirected_wiki)
+modularity(ml_wiki)
+membership(ml_wiki)
+dendPlot(ml_wiki)
+
+```
+
+
+```{r}
+#optimal.community
+o_wiki <- optimal.community(wiki)
+modularity(o_wiki)
+membership(o_wiki)
+dendPlot(o_wiki)
+
+```
+
+```{r}
+#spinglass.community
+sg_wiki <- spinglass.community(wiki)
+modularity(sg_wiki)
+membership(sg_wiki)
+dendPlot(sg_wiki)
+
+```
+```{r}
+#infomap.community
+im_wiki <- infomap.community(wiki)
+modularity(im_wiki)
+membership(im_wiki)
+dendPlot(im_wiki)
+
+```
+
+
